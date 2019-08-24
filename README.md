@@ -1,0 +1,2 @@
+# FractalCompression
+Proyecto Matemática Computacional
