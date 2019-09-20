@@ -1,48 +1,46 @@
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-from scipy import ndimage
-from scipy import optimize
-import numpy as np
+import matplotlib.pyplot as plt # crea una una figura, o lineas en un area y pone labes
+import matplotlib.image as mpimg # carga la info de la data (solo funciona en formato .png)
+from scipy import ndimage # paquete que contiene procesamientos de imagenes multi-dimencional
+from scipy import optimize # paquete para reducir y optimizar ecuaciones o formulas
+import numpy as np # libreria para computacion cientifica para arrays multi-dimensionales
 import math
 
 # Manipulate channels
 
-def get_greyscale_image(img):
-    return np.mean(img[:,:,:2], 2)
+def get_greyscale_image(img): # tonos de grises (entre blanco y negro 256) del RGB
+    return np.mean(img[:,:,:2], 2) # .mean devuelve el promedio de un array
 
-def extract_rgb(img):
-    return img[:,:,0], img[:,:,1], img[:,:,2]
+def extract_rgb(img): # extraemos los colores RGB verde, rojo y azul
+    return img[:,:,0], img[:,:,1], img[:,:,2] #[:, :, 0] = Verde [:, :, 1] = Azul [:, :, 2] = Rojo
 
 def assemble_rbg(img_r, img_g, img_b):
     shape = (img_r.shape[0], img_r.shape[1], 1)
-    return np.concatenate((np.reshape(img_r, shape), np.reshape(img_g, shape), 
-        np.reshape(img_b, shape)), axis=2)
+    return np.concatenate((np.reshape(img_r, shape), np.reshape(img_g, shape), #une una secuencia de arrays con un axis existente
+        np.reshape(img_b, shape)), axis=2) # .reshape cambia la forma del array
 
 # Transformations
-
 def reduce(img, factor):
-    result = np.zeros((img.shape[0] // factor, img.shape[1] // factor))
+    result = np.zeros((img.shape[0] // factor, img.shape[1] // factor)) #retorna nuevo array del tamaño y tipo indicado, llenado de 0s
     for i in range(result.shape[0]):
         for j in range(result.shape[1]):
-            result[i,j] = np.mean(img[i*factor:(i+1)*factor,j*factor:(j+1)*factor])
+            result[i,j] = np.mean(img[i*factor:(i+1)*factor,j*factor:(j+1)*factor]) #promedio del array
     return result
 
-def rotate(img, angle):
-    return ndimage.rotate(img, angle, reshape=False)
+def rotate(img, angle): # rotas la imagen
+    return ndimage.rotate(img, angle, reshape=False) # se rota por el angulo dado como parametro (para preservar la forma de la imagen el angulo tiene que estar entre {0, 90, 180, 270})
 
-def flip(img, direction):
-    return img[::direction,:]
+def flip(img, direction): # voltea imagen
+    return img[::direction,:] # rota si es -1 y no hace nada si es 1
 
-def apply_transformation(img, direction, angle, contrast=1.0, brightness=0.0):
+def apply_transformation(img, direction, angle, contrast=1.0, brightness=0.0): # aplica la transformacion
     return contrast*rotate(flip(img, direction), angle) + brightness
 
 # Contrast and brightness
-
 def find_contrast_and_brightness1(D, S):
     # Fix the contrast and only fit the brightness
     contrast = 0.75
     brightness = (np.sum(D - contrast*S)) / D.size
-    return contrast, brightness 
+    return contrast, brightness
 
 def find_contrast_and_brightness2(D, S):
     # Fit the contrast and the brightness
@@ -180,7 +178,7 @@ def test_rgb():
     plt.subplot(122)
     plt.imshow(retrieved_img.astype(np.uint8), interpolation='none')
     plt.show()
-                    
+
 if __name__ == '__main__':
-    #test_greyscale()
-    test_rgb()
+    test_greyscale()
+    #test_rgb()

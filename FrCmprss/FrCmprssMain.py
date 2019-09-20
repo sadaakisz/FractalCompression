@@ -4,5 +4,3 @@ from scipy import ndimage
 from scipy import optimize
 import numpy as np
 import math
-
-
