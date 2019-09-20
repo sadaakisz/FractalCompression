@@ -1,9 +1,14 @@
-import matplotlib.pyplot as plt # crea una una figura, o lineas en un area y pone labes
+import matplotlib.pyplot as plt # crea una figura, o lineas en un area y pone labes
 import matplotlib.image as mpimg # carga la info de la data (solo funciona en formato .png)
 from scipy import ndimage # paquete que contiene procesamientos de imagenes multi-dimencional
 from scipy import optimize # paquete para reducir y optimizar ecuaciones o formulas
 import numpy as np # libreria para computacion cientifica para arrays multi-dimensionales
 import math
+
+# FORMULA: fl(xDk)=s×rotateθ(flipd(reduce(xDk)))+b
+# REDUCE es para ir de 8x8 a 4x4
+# s es el contraste y b el brillo
+# flip y rotate son transformaciones junto con reduce
 
 # Manipulate channels
 
@@ -19,11 +24,11 @@ def assemble_rbg(img_r, img_g, img_b):
         np.reshape(img_b, shape)), axis=2) # .reshape cambia la forma del array
 
 # Transformations
-def reduce(img, factor):
+def reduce(img, factor): # reduce la imagen por el promedio de cada elemento
     result = np.zeros((img.shape[0] // factor, img.shape[1] // factor)) #retorna nuevo array del tamaño y tipo indicado, llenado de 0s
     for i in range(result.shape[0]):
         for j in range(result.shape[1]):
-            result[i,j] = np.mean(img[i*factor:(i+1)*factor,j*factor:(j+1)*factor]) #promedio del array
+            result[i,j] = np.mean(img[i*factor:(i+1)*factor,j*factor:(j+1)*factor]) #promedio del array (reduce el tamaño del la imagen)
     return result
 
 def rotate(img, angle): # rotas la imagen
@@ -33,7 +38,7 @@ def flip(img, direction): # voltea imagen
     return img[::direction,:] # rota si es -1 y no hace nada si es 1
 
 def apply_transformation(img, direction, angle, contrast=1.0, brightness=0.0): # aplica la transformacion
-    return contrast*rotate(flip(img, direction), angle) + brightness
+    return contrast*rotate(flip(img, direction), angle) + brightness #1 bit del flip, 2 bits del angulo, 8 para el contraste y la brillo
 
 # Contrast and brightness
 def find_contrast_and_brightness1(D, S):
