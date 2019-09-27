@@ -52,7 +52,7 @@ def encontrar_brillo_contraste(D, S):
 
 # Compression for greyscale images
 
-def generate_all_transformed_blocks(img, source_size, destination_size, step):
+def generar_todos_bloques_transformados(img, source_size, destination_size, step):
     factor = source_size // destination_size
     transformed_blocks = []
     for k in range((img.shape[0] - source_size) // step + 1):
@@ -60,51 +60,51 @@ def generate_all_transformed_blocks(img, source_size, destination_size, step):
             # Extract the source block and reduce it to the shape of a destination block
             S = reducir(img[k*step:k*step+source_size,l*step:l*step+source_size], factor)
             # Generate all possible transformed blocks
-            for direction, angle in candidates:
+            for direction, angle in candidatos:
                 transformed_blocks.append((k, l, direction, angle, aplicar_transformacion(S, direction, angle)))
     return transformed_blocks
 
-def compress(img, source_size, destination_size, step):
-    transformations = []
-    transformed_blocks = generate_all_transformed_blocks(img, source_size, destination_size, step)
-    i_count = img.shape[0] // destination_size
-    j_count = img.shape[1] // destination_size
-    for i in range(i_count):
-        transformations.append([])
-        for j in range(j_count):
-            print("{}/{} ; {}/{}".format(i, i_count, j, j_count))
-            transformations[i].append(None)
+def comprimir(img, tamano_origen, tamano_destino, pasos):
+    transformacion = []
+    transformacion_bloques = generar_todos_bloques_transformados(img, tamano_origen, tamano_destino, pasos)
+    i_cont = img.shape[0] // tamano_destino
+    j_cont = img.shape[1] // tamano_destino
+    for i in range(i_cont):
+        transformacion.append([])
+        for j in range(j_cont):
+            print("{}/{} ; {}/{}".format(i, i_cont, j, j_cont))
+            transformacion[i].append(None)
             min_d = float('inf')
             # Extract the destination block
-            D = img[i*destination_size:(i+1)*destination_size,j*destination_size:(j+1)*destination_size]
+            D = img[i*tamano_destino:(i+1)*tamano_destino,j*tamano_destino:(j+1)*tamano_destino]
             # Test all possible transformations and take the best one
-            for k, l, direction, angle, S in transformed_blocks:
-                contrast, brightness = encontrar_brillo_contraste(D, S)
-                S = contrast*S + brightness
+            for k, l, direccion, angulo, S in transformacion_bloques:
+                contraste, brillo = encontrar_brillo_contraste(D, S)
+                S = contraste*S + brillo
                 d = np.sum(np.square(D - S))
                 if d < min_d:
                     min_d = d
-                    transformations[i][j] = (k, l, direction, angle, contrast, brightness)
-    return transformations
+                    transformacion[i][j] = (k, l, direccion, angulo, contraste, brillo)
+    return transformacion
 
-def decompress(transformations, source_size, destination_size, step, nb_iter=8):
-    factor = source_size // destination_size
-    height = len(transformations) * destination_size
-    width = len(transformations[0]) * destination_size
-    iterations = [np.random.randint(0, 256, (height, width))]
-    cur_img = np.zeros((height, width))
+def descomprimir(transformaciones, tamano_origen, tamano_destino, pasos, nb_iter=8):
+    factor = tamano_origen // tamano_destino
+    altura = len(transformaciones) * tamano_destino
+    ancho = len(transformaciones[0]) * tamano_destino
+    iteraciones = [np.random.randint(0, 256, (altura, ancho))]
+    cur_img = np.zeros((altura, ancho))
     for i_iter in range(nb_iter):
         print(i_iter)
-        for i in range(len(transformations)):
-            for j in range(len(transformations[i])):
+        for i in range(len(transformaciones)):
+            for j in range(len(transformaciones[i])):
                 # Apply transform
-                k, l, flip, angle, contrast, brightness = transformations[i][j]
-                S = reducir(iterations[-1][k*step:k*step+source_size,l*step:l*step+source_size], factor)
-                D = aplicar_transformacion(S, flip, angle, contrast, brightness)
-                cur_img[i*destination_size:(i+1)*destination_size,j*destination_size:(j+1)*destination_size] = D
-        iterations.append(cur_img)
-        cur_img = np.zeros((height, width))
-    return iterations
+                k, l, invertir, angulo, contraste, brillo = transformaciones[i][j]
+                S = reducir(iteraciones[-1][k*pasos:k*pasos+tamano_origen,l*pasos:l*pasos+tamano_origen], factor)
+                D = aplicar_transformacion(S, invertir, angulo, contraste, brillo)
+                cur_img[i*tamano_destino:(i+1)*tamano_destino,j*tamano_destino:(j+1)*tamano_destino] = D
+        iteraciones.append(cur_img)
+        cur_img = np.zeros((altura, ancho))
+    return iteraciones
 
 # Compression for color images
 
@@ -117,14 +117,14 @@ def reduce_rgb(img, factor):
 
 def compress_rgb(img, source_size, destination_size, step):
     img_r, img_g, img_b = extraer_rgb(img)
-    return [compress(img_r, source_size, destination_size, step), \
-        compress(img_g, source_size, destination_size, step), \
-        compress(img_b, source_size, destination_size, step)]
+    return [comprimir(img_r, source_size, destination_size, step), \
+        comprimir(img_g, source_size, destination_size, step), \
+        comprimir(img_b, source_size, destination_size, step)]
 
 def decompress_rgb(transformations, source_size, destination_size, step, nb_iter=8):
-    img_r = decompress(transformations[0], source_size, destination_size, step, nb_iter)[-1]
-    img_g = decompress(transformations[1], source_size, destination_size, step, nb_iter)[-1]
-    img_b = decompress(transformations[2], source_size, destination_size, step, nb_iter)[-1]
+    img_r = descomprimir(transformations[0], source_size, destination_size, step, nb_iter)[-1]
+    img_g = descomprimir(transformations[1], source_size, destination_size, step, nb_iter)[-1]
+    img_b = descomprimir(transformations[2], source_size, destination_size, step, nb_iter)[-1]
     return construir_rgb(img_r, img_g, img_b)
 
 # Plot
@@ -150,9 +150,9 @@ def plot_iterations(iterations, target=None):
 
 # Parameters
 
-directions = [1, -1]
-angles = [0, 90, 180, 270]
-candidates = [[direction, angle] for direction in directions for angle in angles]
+direcciones = [1, -1]
+angulos = [0, 90, 180, 270]
+candidatos = [[direction, angle] for direction in direcciones for angle in angulos]
 
 # Tests
 
@@ -162,8 +162,8 @@ def test_greyscale():
     img = reducir(img, 4)
     plt.figure()
     plt.imshow(img, cmap='gray', interpolation='none')
-    transformations = compress(img, 8, 4, 8)
-    iterations = decompress(transformations, 8, 4, 8)
+    transformations = comprimir(img, 8, 4, 8)
+    iterations = descomprimir(transformations, 8, 4, 8)
     plot_iterations(iterations, img)
     plt.show()
 
