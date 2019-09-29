@@ -50,19 +50,19 @@ def encontrar_brillo_contraste(D, S):
     x, _, _, _ = np.linalg.lstsq(A, b)
     return x[1], x[0]
 
-# Compression for greyscale images
+# Compresion para escala de grises
 
-def generar_todos_bloques_transformados(img, source_size, destination_size, step):
-    factor = source_size // destination_size
-    transformed_blocks = []
-    for k in range((img.shape[0] - source_size) // step + 1):
-        for l in range((img.shape[1] - source_size) // step + 1):
-            # Extract the source block and reduce it to the shape of a destination block
-            S = reducir(img[k*step:k*step+source_size,l*step:l*step+source_size], factor)
-            # Generate all possible transformed blocks
-            for direction, angle in candidatos:
-                transformed_blocks.append((k, l, direction, angle, aplicar_transformacion(S, direction, angle)))
-    return transformed_blocks
+def generar_todos_bloques_transformados(img, tamano_origen, tamano_destino, pasos):
+    factor = tamano_origen // tamano_destino
+    transformacion_bloques = []
+    for k in range((img.shape[0] - tamano_origen) // pasos + 1):
+        for l in range((img.shape[1] - tamano_origen) // pasos + 1):
+            # Extrae el bloque de origen y lo reduce a la forma del bloque de destino
+            S = reducir(img[k*pasos:k*pasos+tamano_origen,l*pasos:l*pasos+tamano_origen], factor)
+            # Genera todos los posibles bloques de transformaciones
+            for direccion, angulo in candidatos:
+                transformacion_bloques.append((k, l, direccion, angulo, aplicar_transformacion(S, direccion, angulo)))
+    return transformacion_bloques
 
 def comprimir(img, tamano_origen, tamano_destino, pasos):
     transformacion = []
@@ -75,9 +75,9 @@ def comprimir(img, tamano_origen, tamano_destino, pasos):
             print("{}/{} ; {}/{}".format(i, i_cont, j, j_cont))
             transformacion[i].append(None)
             min_d = float('inf')
-            # Extract the destination block
+            # Extrae el bloque de destino
             D = img[i*tamano_destino:(i+1)*tamano_destino,j*tamano_destino:(j+1)*tamano_destino]
-            # Test all possible transformations and take the best one
+            # Prueba todas las posibles transformaciones y toma la mejor
             for k, l, direccion, angulo, S in transformacion_bloques:
                 contraste, brillo = encontrar_brillo_contraste(D, S)
                 S = contraste*S + brillo
@@ -97,7 +97,7 @@ def descomprimir(transformaciones, tamano_origen, tamano_destino, pasos, nb_iter
         print(i_iter)
         for i in range(len(transformaciones)):
             for j in range(len(transformaciones[i])):
-                # Apply transform
+                # Aplica transformacion
                 k, l, invertir, angulo, contraste, brillo = transformaciones[i][j]
                 S = reducir(iteraciones[-1][k*pasos:k*pasos+tamano_origen,l*pasos:l*pasos+tamano_origen], factor)
                 D = aplicar_transformacion(S, invertir, angulo, contraste, brillo)
@@ -106,7 +106,7 @@ def descomprimir(transformaciones, tamano_origen, tamano_destino, pasos, nb_iter
         cur_img = np.zeros((altura, ancho))
     return iteraciones
 
-# Compression for color images
+# Compresion para imagenes a color
 
 def reducir_rgb(img, factor):
     img_r, img_g, img_b = extraer_rgb(img)
@@ -127,34 +127,33 @@ def descomprimir_rgb(transformations, source_size, destination_size, step, nb_it
     img_b = descomprimir(transformations[2], source_size, destination_size, step, nb_iter)[-1]
     return construir_rgb(img_r, img_g, img_b)
 
-# Plot
+# Graficos
 
 def plot_iteraciones(iterations, target=None):
-    # Configure plot
+    # Configuracion de graficos
     plt.figure()
     nb_row = math.ceil(np.sqrt(len(iterations)))
     nb_cols = nb_row
-    # Plot
+    # Grafica
     for i, img in enumerate(iterations):
         plt.subplot(nb_row, nb_cols, i+1)
         plt.imshow(img, cmap='gray', vmin=0, vmax=255, interpolation='none')
         if target is None:
             plt.title(str(i))
         else:
-            # Display the RMSE
             plt.title(str(i) + ' (' + '{0:.2f}'.format(np.sqrt(np.mean(np.square(target - img)))) + ')')
         frame = plt.gca()
         frame.axes.get_xaxis().set_visible(False)
         frame.axes.get_yaxis().set_visible(False)
     plt.tight_layout()
 
-# Parameters
+# Parametros globales
 
 direcciones = [1, -1]
 angulos = [0, 90, 180, 270]
-candidatos = [[direction, angle] for direction in direcciones for angle in angulos]
+candidatos = [[direccion, angulo] for direccion in direcciones for angulo in angulos]
 
-# Tests
+# Pruebas
 
 def test_escalagrises():
     img = mpimg.imread('monkey.gif')
@@ -170,13 +169,13 @@ def test_escalagrises():
 def test_rgb():
     img = mpimg.imread('lena.gif')
     img = reducir_rgb(img, 8)
-    transformations = comprimir_rgb(img, 8, 4, 8)
-    retrieved_img = descomprimir_rgb(transformations, 8, 4, 8)
+    trasformaciones = comprimir_rgb(img, 8, 4, 8)
+    imagen_retornada = descomprimir_rgb(trasformaciones, 8, 4, 8)
     plt.figure()
     plt.subplot(121)
     plt.imshow(np.array(img).astype(np.uint8), interpolation='none')
     plt.subplot(122)
-    plt.imshow(retrieved_img.astype(np.uint8), interpolation='none')
+    plt.imshow(imagen_retornada.astype(np.uint8), interpolation='none')
     plt.show()
 
 if __name__ == '__main__':
