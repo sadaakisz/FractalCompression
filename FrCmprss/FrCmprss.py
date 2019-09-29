@@ -108,20 +108,20 @@ def descomprimir(transformaciones, tamano_origen, tamano_destino, pasos, nb_iter
 
 # Compression for color images
 
-def reduce_rgb(img, factor):
+def reducir_rgb(img, factor):
     img_r, img_g, img_b = extraer_rgb(img)
     img_r = reducir(img_r, factor)
     img_g = reducir(img_g, factor)
     img_b = reducir(img_b, factor)
     return construir_rgb(img_r, img_g, img_b)
 
-def compress_rgb(img, source_size, destination_size, step):
+def comprimir_rgb(img, source_size, destination_size, step):
     img_r, img_g, img_b = extraer_rgb(img)
     return [comprimir(img_r, source_size, destination_size, step), \
         comprimir(img_g, source_size, destination_size, step), \
         comprimir(img_b, source_size, destination_size, step)]
 
-def decompress_rgb(transformations, source_size, destination_size, step, nb_iter=8):
+def descomprimir_rgb(transformations, source_size, destination_size, step, nb_iter=8):
     img_r = descomprimir(transformations[0], source_size, destination_size, step, nb_iter)[-1]
     img_g = descomprimir(transformations[1], source_size, destination_size, step, nb_iter)[-1]
     img_b = descomprimir(transformations[2], source_size, destination_size, step, nb_iter)[-1]
@@ -129,7 +129,7 @@ def decompress_rgb(transformations, source_size, destination_size, step, nb_iter
 
 # Plot
 
-def plot_iterations(iterations, target=None):
+def plot_iteraciones(iterations, target=None):
     # Configure plot
     plt.figure()
     nb_row = math.ceil(np.sqrt(len(iterations)))
@@ -156,22 +156,22 @@ candidatos = [[direction, angle] for direction in direcciones for angle in angul
 
 # Tests
 
-def test_greyscale():
+def test_escalagrises():
     img = mpimg.imread('monkey.gif')
     img = escala_grises(img)
     img = reducir(img, 4)
     plt.figure()
     plt.imshow(img, cmap='gray', interpolation='none')
-    transformations = comprimir(img, 8, 4, 8)
-    iterations = descomprimir(transformations, 8, 4, 8)
-    plot_iterations(iterations, img)
+    transformaciones = comprimir(img, 8, 4, 8)
+    iteraciones = descomprimir(transformaciones, 8, 4, 8)
+    plot_iteraciones(iteraciones, img)
     plt.show()
 
 def test_rgb():
     img = mpimg.imread('lena.gif')
-    img = reduce_rgb(img, 8)
-    transformations = compress_rgb(img, 8, 4, 8)
-    retrieved_img = decompress_rgb(transformations, 8, 4, 8)
+    img = reducir_rgb(img, 8)
+    transformations = comprimir_rgb(img, 8, 4, 8)
+    retrieved_img = descomprimir_rgb(transformations, 8, 4, 8)
     plt.figure()
     plt.subplot(121)
     plt.imshow(np.array(img).astype(np.uint8), interpolation='none')
@@ -180,5 +180,5 @@ def test_rgb():
     plt.show()
 
 if __name__ == '__main__':
-    test_greyscale()
+    test_escalagrises()
     #test_rgb()
