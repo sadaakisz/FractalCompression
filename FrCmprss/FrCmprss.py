@@ -1,8 +1,8 @@
-import matplotlib.pyplot as plt # crea una figura, o lineas en un area y pone labes
-import matplotlib.image as mpimg # carga la info de la data (solo funciona en formato .png)
-from scipy import ndimage # paquete que contiene procesamientos de imagenes multi-dimencional
-from scipy import optimize # paquete para reducir y optimizar ecuaciones o formulas
-import numpy as np # libreria para computacion cientifica para arrays multi-dimensionales
+import matplotlib.pyplot as plt                 # crea una figura, o lineas en un area y pone labes
+import matplotlib.image as mpimg                # carga la info de la data (solo funciona en formato .png)
+from scipy import ndimage                       # paquete que contiene procesamientos de imagenes multi-dimencional
+from scipy import optimize                      # paquete para reducir y optimizar ecuaciones o formulas
+import numpy as np                              # libreria para computacion cientifica para arrays multi-dimensionales
 import math
 
 # FORMULA: fl(xDk)=s×rotateθ(flipd(reduce(xDk)))+b
@@ -47,7 +47,7 @@ def encontrar_brillo_contraste(D, S):
     # Arreglar el contraste y brillo
     A = np.concatenate((np.ones((S.size, 1)), np.reshape(S, (S.size, 1))), axis=1)
     b = np.reshape(D, (D.size,))
-    x, _, _, _ = np.linalg.lstsq(A, b)
+    x, _, _, _ = np.linalg.lstsq(A, b, rcond=None)
     return x[1], x[0]
 
 # Compresion para escala de grises
@@ -115,16 +115,16 @@ def reducir_rgb(img, factor):
     img_b = reducir(img_b, factor)
     return construir_rgb(img_r, img_g, img_b)
 
-def comprimir_rgb(img, source_size, destination_size, step):
+def comprimir_rgb(img, tamano_origen, tamano_destino, pasos):
     img_r, img_g, img_b = extraer_rgb(img)
-    return [comprimir(img_r, source_size, destination_size, step), \
-        comprimir(img_g, source_size, destination_size, step), \
-        comprimir(img_b, source_size, destination_size, step)]
+    return [comprimir(img_r, tamano_origen, tamano_destino, pasos), \
+        comprimir(img_g, tamano_origen, tamano_destino, pasos), \
+        comprimir(img_b, tamano_origen, tamano_destino, pasos)]
 
-def descomprimir_rgb(transformations, source_size, destination_size, step, nb_iter=8):
-    img_r = descomprimir(transformations[0], source_size, destination_size, step, nb_iter)[-1]
-    img_g = descomprimir(transformations[1], source_size, destination_size, step, nb_iter)[-1]
-    img_b = descomprimir(transformations[2], source_size, destination_size, step, nb_iter)[-1]
+def descomprimir_rgb(transformaciones, tamano_origen, tamano_destino, pasos, numero_iteraciones=8):
+    img_r = descomprimir(transformaciones[0], tamano_origen, tamano_destino, pasos, numero_iteraciones)[-1]
+    img_g = descomprimir(transformaciones[1], tamano_origen, tamano_destino, pasos, numero_iteraciones)[-1]
+    img_b = descomprimir(transformaciones[2], tamano_origen, tamano_destino, pasos, numero_iteraciones)[-1]
     return construir_rgb(img_r, img_g, img_b)
 
 # Graficos
